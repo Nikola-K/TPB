@@ -159,7 +159,11 @@ class TPB():
                       "handheld games": 406, "ios games": 407, "android games": 408,
                       "other games": 499,
 
-                      "other": 500, "e-books": 601, "comics": 602,
+                      "porn":500, "porn movies":501,"porn movies dvdr":502,
+                      "porn pictures":503, "porn games":504,"porn hd movies":505,
+                      "porn movie clips":506, "porn other":599,
+
+                      "other": 600, "e-books": 601, "comics": 602,
                       "pictures": 603, "covers": 604, "physibles": 605, "other torrents": 699
                       }
 

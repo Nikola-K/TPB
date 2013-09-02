@@ -26,83 +26,87 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import re
-import urllib
+try:
+    import urllib as request
+    from urllib import quote
+except:
+    import urllib.request as request
+    from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
 
 class TPB():
+
     """
     The class that parses the torrent listing page, and builds up
     all Torrent objects.
     """
-        
+
     def __init__(self, domain='https://thepiratebay.sx'):
         """
         For when using a proxy/domain changes.
         """
         self.base_url = domain
-    
-    
+
     def __get_soup(self, page=''):
         """
         Returns a bs4 object of the page requested. page can be:
-        
+
         'recent'
         a 'search' page
         a 'top' page
         """
-        content = urllib.urlopen('%s/%s' % (self.base_url, page)).read()
+        content = request.urlopen('%s/%s' % (self.base_url, page)).read()
         return BeautifulSoup(content)
-    
-    
+
     def __get_torrents_rows(self, soup):
         """
         Returns all 'tr' tag rows as a list of tuples. Each tuple is for
         a single torrent.
         """
-        table = soup.find('table') # the table with all torrent listing
-        return table.findAll('tr')[1:-1] # get all rows but header, pagination
-    
+        table = soup.find('table')  # the table with all torrent listing
+        return table.findAll('tr')[1:-1]  # get all rows but header, pagination
+
     def __build_torrent(self, all_rows):
         """
         Builds and returns a list of Torrent objects from
         the passed source.
         """
-        all_torrents = [] # list to hold all torrents
-        
+        all_torrents = []  # list to hold all torrents
+
         for row in all_rows:
             # Scrape, strip and build!!!
-            cols = row.findAll('td') # split the row into it's columns
-            
+            cols = row.findAll('td')  # split the row into it's columns
+
             # this column contains the categories
             cat_col = cols[0].findAll('a')
             [category, sub_category] = [c.string for c in cat_col]
-            
+
             # this column with all important info
-            links = cols[1].findAll('a') # get 4 a tags from this columns
-            title = links[0].string.encode('utf8') # title of the torrent
+            links = cols[1].findAll('a')  # get 4 a tags from this columns
+            title = links[0].string.encode('utf8')  # title of the torrent
             url = '%s/%s' % (self.base_url, links[0].get('href'))
-            magnet_link = links[1].get('href') # the magnet download link
-            torrent_link = links[2].get('href') # the torrent download link
+            magnet_link = links[1].get('href')  # the magnet download link
+            torrent_link = links[2].get('href')  # the torrent download link
             if not torrent_link.endswith('.torrent'):
                 torrent_link = None
-            
-            meta_col = cols[1].find('font').text # don't need user
+
+            meta_col = cols[1].find('font').text  # don't need user
             pat = re.compile('Uploaded (.*), Size (.*), ULed by (.*)')
             match = re.match(pat, meta_col)
             created = match.groups()[0]
-            size = match.groups()[1].replace(u'\xa0',u' ')
-            user = match.groups()[2].encode('utf8') # uploaded by user
-            
+            size = match.groups()[1].replace(u'\xa0', u' ')
+            user = match.groups()[2].encode('utf8')  # uploaded by user
+
             # last 2 columns for seeders and leechers
             seeders = int(cols[2].string)
             leechers = int(cols[3].string)
-            
+
             t = Torrent(title, url, category, sub_category, magnet_link,
                         torrent_link, created, size, user, seeders, leechers)
             all_torrents.append(t)
-        
+
         return all_torrents
 
     def get_recent_torrents(self):
@@ -111,13 +115,13 @@ class TPB():
         """
         all_rows = self.__get_torrents_rows(
             self.__get_soup(page='recent')
-            )
+        )
         return self.__build_torrent(all_rows)
 
     def search(self, query, category=0):
         """
         Searches TPB for the passed query and returns a list of Torrents.
-        
+
         category is an int with one of the following values:
         0 - all
         100 - audio
@@ -140,48 +144,49 @@ class TPB():
         """
         all_rows = self.__get_torrents_rows(
             self.__get_soup(page='search/{0}/0/99/{1}'.format(
-                urllib.quote(query),
+                quote(query),
                 category
-                ))
-            )
+            ))
+        )
         return self.__build_torrent(all_rows)
-    
+
 
 class Torrent():
+
     """
     Represents one single torrent on TPB
     """
-    
+
     def __init__(self, title, url, category, sub_category, magnet_link,
                  torrent_link, created, size, user, seeders, leechers):
-        self.title = title # the title of the torrent
-        self.url = url # TPB url for the torrent
-        self.category = category # the main category
-        self.sub_category = sub_category # the sub category
-        self.magnet_link = magnet_link # magnet download link
-        self.torrent_link = torrent_link # .torrent download link
-        self.created = created # uploaded date time
-        self.size = size # size of torrent
-        self.user = user # username of uploader
-        self.seeders = seeders # number of seeders
-        self.leechers = leechers # number of leechers
-    
+        self.title = title  # the title of the torrent
+        self.url = url  # TPB url for the torrent
+        self.category = category  # the main category
+        self.sub_category = sub_category  # the sub category
+        self.magnet_link = magnet_link  # magnet download link
+        self.torrent_link = torrent_link  # .torrent download link
+        self.created = created  # uploaded date time
+        self.size = size  # size of torrent
+        self.user = user  # username of uploader
+        self.seeders = seeders  # number of seeders
+        self.leechers = leechers  # number of leechers
+
     def print_torrent(self):
         """
         Print the details of a torrent
         """
-        print 'Title: %s' % self.title
-        print 'URL: %s' % self.url
-        print 'Category: %s' % self.category
-        print 'Sub-Category: %s' % self.sub_category
-        print 'Magnet Link: %s' % self.magnet_link
-        print 'Torrent Link: %s' % self.torrent_link
-        print 'Uploaded: %s' % self.created
-        print 'Size: %s' % self.size
-        print 'User: %s' % self.user
-        print 'Seeders: %d' % self.seeders
-        print 'Leechers: %d' % self.leechers
-    
+        print('Title: %s' % self.title)
+        print('URL: %s' % self.url)
+        print('Category: %s' % self.category)
+        print('Sub-Category: %s' % self.sub_category)
+        print('Magnet Link: %s' % self.magnet_link)
+        print('Torrent Link: %s' % self.torrent_link)
+        print('Uploaded: %s' % self.created)
+        print('Size: %s' % self.size)
+        print('User: %s' % self.user)
+        print('Seeders: %d' % self.seeders)
+        print('Leechers: %d' % self.leechers)
+
     def __repr__(self):
         """
         A string representation of the class object

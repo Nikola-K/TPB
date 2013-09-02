@@ -95,7 +95,7 @@ class TPB():
             meta_col = cols[1].find('font').text  # don't need user
             pat = re.compile('Uploaded (.*), Size (.*), ULed by (.*)')
             match = re.match(pat, meta_col)
-            created = match.groups()[0]
+            created = match.groups()[0].encode('utf8')
             size = match.groups()[1].replace(u'\xa0', u' ')
             user = match.groups()[2].encode('utf8')  # uploaded by user
 
@@ -118,7 +118,7 @@ class TPB():
         )
         return self.__build_torrent(all_rows)
 
-    def search(self, query, category=0):
+    def search(self, query, category=""):
         """
         Searches TPB for the passed query and returns a list of Torrents.
 
@@ -142,10 +142,33 @@ class TPB():
             601 - E-books, 602 - Comics, 603 - Pictures, 604 - Covers,
             605 - Physibles, 699 - Other
         """
+        categories = {"audio": 100, "music": 101, "audio books": 102,
+                      "sound clips": 103, "flac": 104, "other audio": 199,
+
+                      "video": 200, "movies": 201, "movies dvdr": 202,
+                      "music videos": 203, "movie clips": 204, "tv shows": 205,
+                      "handheld": 206, "hd movies": 207, "hd tv shows": 208,
+                      "3d": 209, "other video": 299,
+
+                      "applications": 300, "windows": 301, "mac applications": 302,
+                      "unix": 303, "handheld": 304, "ios applications": 305,
+                      "android applications": 306, "other os applications": 399,
+
+                      "games": 400, "pc games": 401, "mac games": 402,
+                      "psx": 403, "xbox360": 404, "wii": 405,
+                      "handheld games": 406, "ios games": 407, "android games": 408,
+                      "other games": 499,
+
+                      "other": 500, "e-books": 601, "comics": 602,
+                      "pictures": 603, "covers": 604, "physibles": 605, "other torrents": 699
+                      }
+
+        category = categories.get(category.lower(), None)
+
         all_rows = self.__get_torrents_rows(
             self.__get_soup(page='search/{0}/0/99/{1}'.format(
                 quote(query),
-                category
+                0 if category is None else category
             ))
         )
         return self.__build_torrent(all_rows)

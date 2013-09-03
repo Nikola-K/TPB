@@ -12,11 +12,6 @@ for to in t.get_recent_torrents():
     print '*' * 50
     to.print_torrent()
     print '\n'
-
-for to in t.search("breaking bad", category="tv shows"):
-    print('*' * 50)
-    to.print_torrent()
-    print('\n')
 """
 # search for programming ebooks
 results = t.search('hello world', category=601)

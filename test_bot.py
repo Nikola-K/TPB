@@ -9,9 +9,9 @@ t = TPB()
 
 
 for to in t.get_recent_torrents():
-    print('*' * 50)
+    print '*' * 50
     to.print_torrent()
-    print('\n')
+    print '\n'
 
 for to in t.search("breaking bad", category="tv shows"):
     print('*' * 50)
